@@ -6,4 +6,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|iOS'">
     <DebuggerFlavor>iOSEmulatoriPhone5S</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Android'">
+    <DebuggerFlavor>AndroidEmulator</DebuggerFlavor>
+    <AndroidEmulatorID>AndroidDevice;Device</AndroidEmulatorID>
+  </PropertyGroup>
 </Project>
