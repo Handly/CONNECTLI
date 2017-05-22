@@ -115,4 +115,5 @@
   <preference name="UIWebViewBounce" value="false" />
   <preference name="SuppressesLongPressGesture" value="true" />
   <plugin name="cordova-plugin-statusbar" version="2.2.3" />
+  <plugin name="com.lampa.startapp" version="0.1.4" src="https://github.com/lampaa/com.lampa.startapp.git" />
 </widget>

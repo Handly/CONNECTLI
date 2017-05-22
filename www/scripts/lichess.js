@@ -4,18 +4,21 @@
 function lichessLogin() {
     var xhttp = new XMLHttpRequest();
     var url = "https://en.lichess.org/login";
-    var params = "username=" + $('#username').val() + "&password=" + $('#password').val();
+    var params = "username=" + $('#user').val() + "&password=" + $('#password').val();
     xhttp.open("POST", url, true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     // send the proper header information along with the request
     xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
     xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-            $("#loginPanel").panel("close");
-            $("#login-link").hide();
-            $("#logout-btn").show();
             console.log(xhttp.responseText);
+            document.getElementById("loginInfo").style.display = "none";
+            document.getElementById("connectInfo").style.display = "none";
+            document.getElementById("logoutInfo").style.display = "initial";
+            document.getElementById("username").innerText = JSON.parse(xhttp.responseText).username;
         }
+        else if (this.readyState == 4 && this.status != 200)
+            document.getElementById('loginInfo').style.display = 'initial';
     };
     xhttp.send(params);
 }
@@ -30,39 +33,38 @@ function lichessLogout() {
     xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
     xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
-            $("#login-link").show();
-            $("#logout-btn").hide();
             console.log(xhttp.responseText);
+            $('#user').val("");
+            document.getElementById("connectInfo").style.display = "initial";
+            document.getElementById("logoutInfo").style.display = "none";
         }
     };
     xhttp.send();
 }
 
-// Get Lichess account info including current games
-// returns true if logged in, false if "unauthorized"
-function getLichessUser() {
-    var xhttp = new XMLHttpRequest();
-    var url = "https://en.lichess.org/account/info/";
-    var bustCache = '?' + new Date().getTime();
-    xhttp.open("GET", url + bustCache, true);
+//// Get Lichess account info including current games
+//// returns true if logged in, false if "unauthorized"
+//function getLichessUser() {
+//    var xhttp = new XMLHttpRequest();
+//    var url = "https://en.lichess.org/account/info/";
+//    var bustCache = '?' + new Date().getTime();
+//    xhttp.open("GET", url + bustCache, true);
 
-    // send the proper header information along with the request
-    xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            // status OK --> return true
-            $("#login-link").hide();
-            $("#logout-btn").show();
-        }
-        else if (this.readyState == 4 && this.status != 200) {
-            // unauthorized --> return false
-            $("#login-link").show();
-            $("#logout-btn").hide();
-        }
-    };
-    xhttp.send();
+//    // send the proper header information along with the request
+//    xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
+//    xhttp.onreadystatechange = function () {
+//        if (this.readyState == 4 && this.status == 200) {
+//            // status OK --> return true
+//            document.getElementById("connectH2").innerHTML = JSON.parse(xhttp.responseText).username + "<br /><span onclick='lichessLogout()'>logout</span>";
+//        }
+//        else if (this.readyState == 4 && this.status != 200) {
+//            // unauthorized --> return false
+//            document.getElementById("connectH2").innerHTML = "Connect to<br />lichess";
+//        }
+//    };
+//    xhttp.send();
 
-}
+//}
 
 function createMachineGame() {
     console.log("game with machine requested");
@@ -72,15 +74,13 @@ function createOTBGame() {
     console.log("otb game requested");
 }
 
-
+writer = null;
 
 pinger = null;
 
 lastMove = null;
 
 latestMove = null;
-
-writer = null;
 
 function gameConnect(fullID) {
 
@@ -115,22 +115,8 @@ function gameConnect(fullID) {
 
             dests = gameInfo.possibleMoves;
 
-            gameObject.player = gameInfo.game.player;
-            gameObject.myColor = gameInfo.player.color;
-
-            if ('clock' in gameInfo) {
-                gameObject.timed = true;
-                gameObject.timeStamp = Date.now();
-                gameObject.bClock = gameInfo.clock.black;
-                gameObject.wClock = gameInfo.clock.white;
-
-                gameObject.clock = gameInfo.clock.running;
-
-                updateClocks(init);
-
-                window.decrementer = setInterval(function () { updateClocks() }, 100);
-
-            }
+            player = gameInfo.game.player;
+            myColor = gameInfo.player.color;
 
             var baseUrl = gameInfo.url.socket; // obtained from game creation API (`url.socket`)
             clientId = Math.random().toString(36).substring(2); // created and stored by the client
@@ -166,7 +152,7 @@ function gameConnect(fullID) {
                             digestMSG(eventData.d[i]);
                     }
                     else
-                        digestMSG(eventData);   
+                        digestMSG(eventData);
                 }
             };
 
@@ -177,8 +163,7 @@ function gameConnect(fullID) {
             socket.onclose = function (event) {
                 clearInterval(pinger);
                 pinger = null;
-                if (gameObject.clock)
-                    clearInterval(decrementer);
+
                 console.log("socketClosed!");
 
             };
@@ -193,60 +178,7 @@ function gameConnect(fullID) {
     }
 }
 
-var blacks;
-var whites;
 
-
-
-function updateClocks(init) {
-
-    if (gameObject.clock || init) {
-
-        if (gameObject.player == "black" || init) {
-
-            blacks = gameObject.bClock - Math.floor((Date.now() - gameObject.timeStamp) / 1000);
-            if (blacks < 0) {
-                blacks = 0;
-                clearInterval(decrementer);
-                syncFEN();
-            }
-            bHours = Math.floor(blacks / 3600);
-            if (bHours < 10)
-                bHours = "0" + bHours;
-            bMins = Math.floor(blacks % 3600 / 60);
-            if (bMins < 10)
-                bMins = "0" + bMins;
-            bSecs = Math.floor(blacks % 60);
-            if (bSecs < 10)
-                bSecs = "0" + bSecs;
-            whichClock = (gameObject.myColor == "white") ? "overTime" : "underTime";
-            document.getElementById(whichClock).innerHTML = (bHours + ":" + bMins + ":" + bSecs);
-        }
-
-        if (gameObject.player == "white" || init) {
-
-            whites = gameObject.wClock - Math.floor((Date.now() - gameObject.timeStamp) / 1000);
-            if (whites < 0) {
-                whites = 0;
-                clearInterval(decrementer);
-                syncFEN();
-            }
-            wHours = Math.floor(whites / 3600);
-            if (wHours < 10)
-                wHours = "0" + wHours;
-            wMins = Math.floor(whites % 3600 / 60);
-            if (wMins < 10)
-                wMins = "0" + wMins;
-            wSecs = Math.floor(whites % 60);
-            if (wSecs < 10)
-                wSecs = "0" + wSecs;
-            whichClock = (gameObject.myColor == "black") ? "overTime" : "underTime";
-            document.getElementById(whichClock).innerHTML = (wHours + ":" + wMins + ":" + wSecs);
-        }
-
-    }
-
-}
 
 
 let dests = new Object();
@@ -297,36 +229,7 @@ function sendMove(source, target) {
 
 }
 
-function rematch()
-{
-    var rematch = {
-        t: 'rematch-yes',
-        d: {}
-    };
 
-    socket.send(JSON.stringify(rematch));
-    console.log("rematch requested");
-}
-
-function resign() {
-    var resign = {
-        t: 'resign',
-        d: {}
-    };
-
-    socket.send(JSON.stringify(resign));
-    console.log("resign requested");
-}
-
-function takeback() {
-    var takeback = {
-        t: 'takeback-yes',
-        d: {}
-    };
-
-    socket.send(JSON.stringify(takeback));
-    console.log("takeback requested");
-}
 
 function syncFEN() {
     var xhttp = new XMLHttpRequest();
@@ -341,7 +244,6 @@ function syncFEN() {
             var currentFEN = JSON.parse(xhttp.responseText).game.fen;
             version = JSON.parse(xhttp.responseText).player.version;
             console.log(currentFEN);
-            board.position(currentFEN);
         }
     };
     xhttp.send();
@@ -380,59 +282,22 @@ function digestMSG(eventData) {
         }
         else if (eventData.t == "move") {
 
-            gameObject.timeStamp = Date.now();
-
             latestMove = eventData.d.uci;
-
-            board.position(eventData.d.fen);
 
             dests = eventData.d.dests;
 
-            gameObject.player = (eventData.d.ply % 2 == 1) ? 'black' : 'white';
+            player = (eventData.d.ply % 2 == 1) ? 'black' : 'white';
 
-            if ('clock' in eventData.d) {
-                gameObject.wClock = eventData.d.clock.white;
-                gameObject.bClock = eventData.d.clock.black;
-                updateClocks(true);
-                gameObject.clock = (eventData.d.ply > 1) ? true : false;
-            }
         }
-        else if (eventData.t == "end") {
-            if (gameObject.clock) {
-                clearInterval(decrementer);
-                gameObject.clock = false;
-                clearInterval(writer);
-                latestMove = null;
-            }
 
-            if ('d' in eventData) {
-                document.getElementById("overTime").innerHTML = eventData.d;
-                document.getElementById("underTime").innerHTML = "wins";
-            }
-            else {
-                document.getElementById("overTime").innerHTML = "draw";
-                document.getElementById("underTime").innerHTML = "game";
-            }
-            document.getElementById("analyzeLink").href = "https://en.lichess.org/" + gameId + "/" + gameObject.myColor;
-            document.getElementById("endMenu").style.display = "initial";
-        }
-            //else if (eventData.t == "redirect") {
-            //    socket.close();
-            //    gameConnect(eventData.d.id);
-            //}
         else if (eventData.t == "reload")
             syncFEN();
-        else if (eventData.t == "clock") {
-            gameObject.timeStamp = Date.now();
-            gameObject.wClock = eventData.d.white;
-            gameObject.bClock = eventData.d.black;
-            updateClocks(true);
-        }
+
         if (eventData.hasOwnProperty("v")) {
             version = eventData.v;
         }
         if (latestMove != null)
-            if (gameObject.player == gameObject.myColor) {
+            if (player == myColor) {
 
                 if (clearInterval(writer)); // make sure cleared before setting
                 writer = setInterval(lightLED, 250);

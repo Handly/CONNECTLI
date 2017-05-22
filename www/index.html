@@ -6,19 +6,15 @@
         For details, see http://go.microsoft.com/fwlink/?LinkID=617521
     -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' gap: data: https://ssl.gstatic.com; connect-src 'self' https://sentry.io https://expl.lichess.org https://tablebase.lichess.org https://en.lichess.org wss://socket.lichess.org:*; script-src 'self' 'unsafe-eval' 'unsafe-inline'; child-src 'self' filesystem: gap://ready; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://en.lichess.org; media-src 'self'">
-
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
     <title>C3</title>
-
     <script src="scripts/jquery-2.1.1.min.js"></script>
     <script src="scripts/jquery.mobile-1.4.5.min.js"></script>
     <script src="scripts/chessboard-0.3.0.js"></script>
-
     <link rel="stylesheet" href="css/jquery.mobile-1.4.5.min.css">
     <link rel="stylesheet" href="css/chessboard-0.3.0.css">
-
     <style>
         .ui-page-theme-a {
             background: #4286f4;
@@ -38,169 +34,100 @@
             src: url('digital-7.mono.ttf');
         }
     </style>
-
 </head>
 <body>
     <div data-role="page" id="home" data-theme="a">
-
         <div data-role="header" id="header" style="background-color: transparent;color:#ffffff;text-shadow:0 0 0;border: none;font-size:40px;position:fixed;left:0px;top:0px;width:100px;height:100px; overflow:hidden;z-index:100;font-size:18px;text-align:center">
-
             <div onclick="(function () { (document.getElementById('header').style.width == '100px') ? document.getElementById('header').style.width = '100%' : document.getElementById('header').style.width = '100px' })();" style="background-color: #4286f4;float:left;width:100px;height:100px">
                 <img style="position: relative;top: 22px;margin: auto;width:44px;" src="img/CONNECT_logo.svg" />
             </div>
             <div style="background-color: #f48642;float:left;height:50px;padding:0px 10px;">
-                <a href="#loginPanel" style="text-decoration:none" id="login-link">Login</a>
-                <span id="logout-btn">Logout</span>
+                <button style="text-decoration:none">Login</button>
             </div>
-            <div style="background-color: #4286f4;float:left;height:50px;padding:0px 10px;">
-                <span onclick="loadGameList()">refresh</span>
+            <div onclick="loadGameSockets()" style="background-color: #4286f4;float:left;height:50px;padding:0px 10px;">
+                <span>sockets</span>
             </div>
             <div style="background-color: #86f442;float:left;height:50px;padding:0px 10px;">
                 <a href="#bluetooth" style="text-decoration:none"><span>Connect Board</span></a>
             </div>
+        </div>
 
-        </div>
-        <div data-role="panel" id="loginPanel">
-            <form>
-                <input type="text" id="username" name="username" placeholder="Username" value="lanyon" required>
-                <input type="password" id="password" name="password" placeholder="Password" value="|LANy0n|" required>
-                <button id="login-btn">Login</button>
-            </form>
-        </div>
         <div data-role="main" class="ui-content" style="background-color: #1a1a1a;">
             <!-- start example HTML -->
 
-
             <div style="margin-top: 150px;" id="gameList"></div>
 
+            <div style="width: 85%; min-height: 110px; color: #ffffff; text-shadow: none; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center;">
 
+                <div id="connectInfo" onclick="lichessLogin()" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;">
+                    <h2 id="connectH2" style="color: #ffffff; text-shadow: none">Connect to<br />lichess</h2>
+                </div>
+
+                <div id="logoutInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none;">
+                    <h2 id="username" style="color: #ffffff; text-shadow: none"></h2>
+                    <span onclick='lichessLogout()'>logout</span>
+                </div>
+
+                <div id="loginInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none">
+                    <form>
+                        <input type="text" id="user" name="user" placeholder="Username" value="lanyon" required>
+                        <input type="password" id="password" name="password" placeholder="Password" value="|LANy0n|" required>
+                        <button onclick="lichessLogin()">Login</button>
+                    </form>
+                </div>
+
+                <div id="connectedInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none">
+                    <button>disconnect</button>
+                    <button>launch app</button>
+                </div>
+
+            </div>
+
+            <div style="clear:both"></div><br />
             <div style="width: 85%; height: 110px; background-color: #f48642; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden">
                 <div id="board3" style="width: 125px; margin-top: -5px; margin-left: -10px; float: left"></div>
                 <h2 style="color: #ffffff; text-shadow: none">Stockfish lvl 6</h2>
                 <p style="color: #ffffff; text-shadow: none">local AI &middot; tap to play</p>
             </div>
-
             <div style="clear:both"></div><br />
-
             <div style="width: 85%; height: 110px; background-color: #86f442; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden">
                 <div id="board4" style="width: 125px; margin-top: -5px; margin-right: -10px; float: right"></div>
                 <h2 style="color: #ffffff; text-shadow: none">Lanyon</h2>
                 <p style="color: #ffffff; text-shadow: none">OTB &middot; tap to play</p>
             </div>
-
             <div style="clear:both"></div><br />
-
             <a href="" style="text-decoration:none">
                 <div style="width: 85%; height: 110px; background-color: #f48642; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden">
                     <br />
                     <h2 style="color: #ffffff; text-shadow: none;">Play Local AI</h2>
                 </div>
             </a>
-
             <div style="clear:both"></div><br />
-
             <a href="" style="text-decoration:none">
                 <div style="width: 85%; height: 110px; background-color: #86f442; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden">
                     <br />
                     <h2 style="color: #ffffff; text-shadow: none;">Record Game</h2>
                 </div>
             </a>
-
             <div id="asdf">fdsa</div>
-
             <div style="clear:both"></div><br />
             <!-- end example HTML -->
             <div style="width: 85%;padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden"><span style="color: #ffffff; text-shadow: none;font-size:10px">CONNECT v1.0 - Handly LLC &copy; 2017</span></div>
 
-
         </div>
-
     </div>
 
-    <script>
-        var init66 = function () {
-
-            //--- start example JS ---
-
-            var board3 = ChessBoard('board3', {
-                position: 'r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1',
-                showNotation: false
-            });
-
-            var board4 = ChessBoard('board4', {
-                position: 'r1k4r/p2nb1p1/2b4p/1p1n1p2/2PP4/3Q1NB1/1P3PPP/R5K1',
-                showNotation: false
-            });
-            //--- end example JS ---
-
-        }; // end init()
-        $(document).ready(init66);
-    </script>
-
-
-
 
     <script>
 
-        $(document).on('pagebeforeshow', '#home', function () {
-
-            loadGameList();
-            document.getElementById("asdf").innerHTML = "...";
-
-        });
-
-        let gameObject = new Object();
-
-        function loadGameList() {
-            $("#gameList").html("");
-
-            $('#gameList').one('click', 'a.current', function () {
-
-
-
-
-                console.log("connecting to game with id = " + $(this).attr('data-gameid'));
-                cfg.onDrop = eval($(this).attr('data-gametype'));
-                cfg.orientation = $(this).attr('data-orientation');
-                gameConnect($(this).attr('data-gameid'));
-
-                document.getElementById("overTime").innerHTML = "&nbsp;";
-                document.getElementById("underTime").innerHTML = "&nbsp;";
-
-                gameObject = {
-                    'clock': false,
-                    'player': 'white',
-                    'bClock': 0,
-                    'wClock': 0,
-                    'myColor': 'white',
-                    'timeStamp': 0,
-                    'timed': false
-                };
-
-                if ($(this).attr('data-lastmove') != "") {
-
-                    var writeTargetInit;
-
-                    // writeSource = squares.indexOf($(this).attr('data-lastmove').slice(0, 2));
-                    writeTargetInit = squares.indexOf($(this).attr('data-lastmove').slice(2, 4));
-                    var data = new Uint8Array(1);
-                    data[0] = writeTargetInit;
-
-                    ble.write(device_id, service_id, characteristic_id, data.buffer);
-                }
-                else
-                    lastMove = null;
-
-                if ($(this).attr('data-secondsleft') != null)
-                    gameObject.timed = true;
-                else
-                    gameObject.timed = false;
+        function loadGameSockets() {
 
 
 
 
 
-            });
+
+
 
             var xhttp = new XMLHttpRequest();
             var url = "https://en.lichess.org/account/info/";
@@ -212,18 +139,39 @@
             xhttp.onreadystatechange = function () {
                 if (this.readyState == 4 && this.status == 200) {
                     games = JSON.parse(xhttp.responseText).nowPlaying;
+                    var writeTargetInit;
+                    if (games[0].lastMove != "")
+                        writeTargetInit = squares.indexOf(games[0].lastMove.slice(2, 4));
+                    else lastMove = null;
+                    var data = new Uint8Array(1);
+                    data[0] = writeTargetInit;
+                    ble.write(device_id, service_id, characteristic_id, data.buffer);
 
-                    for (var i = 0; i < games.length; i++) {
-                        if (i % 2 == 0)
-                            $("#gameList").append("<a style='text-decoration:none' href='#chessboard' class='current' data-gametype='lichess' data-secondsleft='" + games[i].secondsLeft + "' data-orientation='" + games[i].color + "' data-lastmove='" + games[i].lastMove + "' data-gameid='" + games[i].fullId + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><div id='board" + i + "' style='width: 125px; margin-top: -5px; margin-right: -10px; float: right'></div><h2 style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + "</h2><p style='color: #ffffff; text-shadow: none'>lichess &middot; tap to play</p></div></a><div style='clear:both'></div><br />");
-                        else
-                            $("#gameList").append("<a style='text-decoration:none' href='#chessboard' class='current' data-gametype='lichess' data-secondsleft='" + games[i].secondsLeft + "' data-orientation='" + games[i].color + "' data-lastmove='" + games[i].lastMove + "' data-gameid='" + games[i].fullId + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><div id='board" + i + "' style='width: 125px; margin-top: -5px; margin-left: -10px; float: left'></div><h2 style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + "</h2><p style='color: #ffffff; text-shadow: none'>lichess &middot; tap to play</p></div></a><div style='clear:both'></div><br />");
+                    gameConnect(games[0].fullId);
+                    //for (var i = 0; i < games.length; i++) {
 
-                        var board = ChessBoard('board' + i, {
-                            position: games[i].fen,
-                            orientation: games[i].color,
-                            showNotation: false
-                        });
+                    //    if (i % 2 == 0)
+                    //        $("#gameList").append("<a style='text-decoration:none' href='#chessboard' class='current' data-gametype='lichess' data-secondsleft='" + games[i].secondsLeft + "' data-orientation='" + games[i].color + "' data-lastmove='" + games[i].lastMove + "' data-gameid='" + games[i].fullId + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><div id='board" + i + "' style='width: 125px; margin-top: -5px; margin-right: -10px; float: right'></div><h2 style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + "</h2><p style='color: #ffffff; text-shadow: none'>lichess &middot; tap to play</p></div></a><div style='clear:both'></div><br />");
+                    //    else
+                    //        $("#gameList").append("<a style='text-decoration:none' href='#chessboard' class='current' data-gametype='lichess' data-secondsleft='" + games[i].secondsLeft + "' data-orientation='" + games[i].color + "' data-lastmove='" + games[i].lastMove + "' data-gameid='" + games[i].fullId + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><div id='board" + i + "' style='width: 125px; margin-top: -5px; margin-left: -10px; float: left'></div><h2 style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + "</h2><p style='color: #ffffff; text-shadow: none'>lichess &middot; tap to play</p></div></a><div style='clear:both'></div><br />");
+
+
+                    //}
+
+                    try {
+                        startApp.set({
+                            "application": "org.lichess.mobileapp"
+                        }).start();
+                    }
+                    catch (error) {
+                        console.log(error);
+                    }
+
+                    try {
+                        startApp.set("lichess://").start();
+                    }
+                    catch (error) {
+                        console.log(error);
                     }
                 }
             };
@@ -231,7 +179,6 @@
         }
 
     </script>
-
 
     <div data-role="page" id="bluetooth" data-theme="a">
         <div data-role="header" data-add-back-btn="true">
@@ -248,7 +195,6 @@
             <div id="statusDiv"></div>
         </div>
     </div>
-
     <script>
 
         var service_id = '49535343-FE7D-4AE5-8FA9-9FAFD205E455';
@@ -291,7 +237,7 @@
                 // Decode the ArrayBuffer into a typed Array based on the data you expect
                 var data = new Uint8Array(buffer);
 
-                document.getElementById("asdf").innerHTML = document.getElementById("asdf").innerHTML+"<br />"+(data[0]);
+                document.getElementById("asdf").innerHTML = document.getElementById("asdf").innerHTML + "<br />" + (data[0]);
                 console.log("if " + data[0] + " equals " + writeTarget + ", blinking should stop");
                 if (data[0] == writeTarget) {
                     clearInterval(writer);
@@ -355,7 +301,6 @@
 
     </script>
 
-
     <script>
         $('#createMachineGame-btn').one('click', function () {
             cfg.onDrop = machine;
@@ -367,12 +312,10 @@
         </div>
         <div data-role="main" class="ui-content">
             <form>
-
                 <select name="engine" id="machine-engine">
                     <option value="stockfish">Stockfish</option>
                     <option value="p4wn" disabled>p4wn</option>
                 </select>
-
                 <select name="level" id="machine-level">
                     <option value="1">Level 1</option>
                     <option value="2">Level 2</option>
@@ -383,23 +326,19 @@
                     <option value="7">Level 7</option>
                     <option value="8">Level 8</option>
                 </select>
-
                 <select name="color" id="machine-color">
                     <option value="white">White</option>
                     <option value="black">Black</option>
                     <option value="random">Random</option>
                 </select>
-
                 <select name="timeMode" id="machine-timeMode">
                     <option value="0">Unlimited</option>
                     <option value="1" disabled>Real time</option>
                 </select>
-
                 <a href="#chessboard" class="ui-btn" id="createMachineGame-btn">Create Game</a>
             </form>
         </div>
     </div>
-
     <script>
         $('#createMachineGame-btn').one('click', function () {
             cfg.onDrop = otb;
@@ -416,25 +355,20 @@
                     <option value="2">Chess960</option>
                     <option value="5">Three-check</option>
                 </select>
-
                 <select name="color" id="otb-color">
                     <option value="white">White</option>
                     <option value="black">Black</option>
                     <option value="random">Random</option>
                 </select>
-
                 <select name="timeMode" id="otb-timeMode">
                     <option value="0">Unlimited</option>
                     <option value="1" disabled>Real time</option>
                 </select>
-
                 <a href="#chessboard" class="ui-btn" id="createOTBGame-btn">Create Game</a>
             </form>
         </div>
     </div>
-
     <div data-role="page" id="chessboard" data-theme="a">
-
         <div id="drawMenu" style="height:100%; width:100%; background-color: rgba(255,255,255,0.90); position:absolute;top:0;left:0;z-index:1000;text-align: center;font-size:32px;display:none">
             <div style="position: relative;top: 50%;transform: perspective(1px) translateY(-50%);margin: auto;">
                 <b>Accept Draw?</b><br /><br />
@@ -442,10 +376,8 @@
                     <span style="margin: 1em; color: #00bb00"><b>Yes</b></span>
                     <span style="margin: 1em; color: #ff0000"><b>No</b></span>
                 </span>
-
             </div>
         </div>
-
         <div id="endMenu" style="height:100%; width:100%; background-color: rgba(255,255,255,0.90); position:absolute;top:0;left:0;z-index:1000;text-align: center;font-size:32px;display:none">
             <div style="position: relative;top: 50%;transform: perspective(1px) translateY(-50%);margin: auto;">
                 <span style="font-size:1.25em;margin: 1em;border:none;border-bottom:2px solid;padding: .3em;"><b>Game Over</b></span>
@@ -458,7 +390,6 @@
                 <a style="text-decoration:none" href="#home"><b style="color:#000000;font-size:.75em;">Home</b></a>
             </div>
         </div>
-
         <div id="gameMenu" style="height:100%; width:100%; background-color: rgba(255,255,255,0.90); position:absolute;top:0;left:0;z-index:1000;text-align: center;font-size:32px;display:none">
             <span id="gameMenuX" style="font-size:2em;line-height:0px;position:absolute;top:32px;right:5px;font-weight:200">X</span>
             <div style="position: relative;top: 50%;transform: perspective(1px) translateY(-50%);margin: auto;">
@@ -472,7 +403,6 @@
                 <a style="text-decoration:none" href="#home"><b style="color:#000000;font-size:.75em;">Home</b></a>
             </div>
         </div>
-
         <div role="main">
             <div id="overBoard" style="overflow:hidden;font-family:'digital-clock-font';">
                 <div id="overTime" style="margin: 0px 20px; color: #ffffff; padding: 5px; background-color: rgba(0, 0, 0, 0.3); border-radius: 5px; font-size: 70px; position: relative; top: 50%; text-align: center; transform: perspective(1px) translateY(-50%);">
@@ -489,7 +419,6 @@
             </div>
         </div>
     </div>
-
     <script>
         var otb = function (source, target, piece, newPos, oldPos, orientation) {
             console.log("New position: " + ChessBoard.objToFen(newPos));

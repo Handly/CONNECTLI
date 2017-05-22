@@ -15,13 +15,7 @@
             e.preventDefault();
         });
 
-        getLichessUser();
-
-        $('#login-btn').click(lichessLogin);
-
-        $('#logout-btn').click(lichessLogout);
-
-        $('#getUser-btn').click(getLichessUser);
+        //getLichessUser();
 
         $('#createMachineGame-btn').click(createMachineGame);
 
@@ -30,6 +24,11 @@
         $('#refreshButton').click(loadDeviceList);
 
         $('#disconnectButton').click(disconnectDevice);
+
+
+        
+
+
 
 
         // Handle the Cordova pause and resume events
