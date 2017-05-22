@@ -77,8 +77,12 @@
                 </div>
 
                 <div id="connectedInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none">
+                    <br />
+                    <br />
                     <button>disconnect</button>
-                    <button>launch app</button>
+                    <button onclick="launchApp()">launch app</button>
+                    <!--<label for="always">Always launch app</label>
+                    <input type="checkbox" id="always">-->
                 </div>
 
             </div>
@@ -138,6 +142,10 @@
             xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
             xhttp.onreadystatechange = function () {
                 if (this.readyState == 4 && this.status == 200) {
+
+                    //if (document.getElementById("always").checked)
+                    //    launchApp();
+
                     games = JSON.parse(xhttp.responseText).nowPlaying;
                     var writeTargetInit;
                     if (games[0].lastMove != "")
@@ -158,21 +166,7 @@
 
                     //}
 
-                    try {
-                        startApp.set({
-                            "application": "org.lichess.mobileapp"
-                        }).start();
-                    }
-                    catch (error) {
-                        console.log(error);
-                    }
 
-                    try {
-                        startApp.set("lichess://").start();
-                    }
-                    catch (error) {
-                        console.log(error);
-                    }
                 }
             };
             xhttp.send();

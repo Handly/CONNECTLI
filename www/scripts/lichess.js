@@ -15,7 +15,11 @@ function lichessLogin() {
             document.getElementById("loginInfo").style.display = "none";
             document.getElementById("connectInfo").style.display = "none";
             document.getElementById("logoutInfo").style.display = "initial";
+            document.getElementById("connectedInfo").style.display = "initial";
             document.getElementById("username").innerText = JSON.parse(xhttp.responseText).username;
+
+            
+            loadGameSockets();
         }
         else if (this.readyState == 4 && this.status != 200)
             document.getElementById('loginInfo').style.display = 'initial';
@@ -37,6 +41,7 @@ function lichessLogout() {
             $('#user').val("");
             document.getElementById("connectInfo").style.display = "initial";
             document.getElementById("logoutInfo").style.display = "none";
+            document.getElementById("connectedInfo").style.display = "none";
         }
     };
     xhttp.send();
@@ -307,4 +312,22 @@ function digestMSG(eventData) {
             }
     }
 
+}
+
+function launchApp() {
+    try {
+        startApp.set({
+            "application": "org.lichess.mobileapp"
+        }).start();
+    }
+    catch (error) {
+        console.log(error);
+    }
+
+    try {
+        startApp.set("lichess://").start();
+    }
+    catch (error) {
+        console.log(error);
+    }
 }
