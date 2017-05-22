@@ -1,7 +1,121 @@
 ﻿// This file implements the Lichess API
+gamify = 0;
+// looks for onGame in the users games
+function lichessOnGame() {
+    console.log("1");
+    games = JSON.parse(superdd).nowPlaying;
+
+
+
+
+
+    if (gamify < games.length)
+        tryy(games[gamify].fullId);
+    else
+        gamify = 0;
+    console.log("2");
+
+
+
+
+
+}
+
+function tryy(id) {
+
+    // ---------------- Store Game Info ----------------- //
+
+    var xhttp = new XMLHttpRequest();
+    var url = "https://en.lichess.org/" + id;
+    xhttp.open("GET", url, true);
+
+
+    xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+
+            gameInfo = JSON.parse(xhttp.responseText);
+            if (gameInfo.player.onGame) {
+                console.log("ongame with " + games[gamify].fullId);
+                var writeTargetInit;
+                if (games[gamify].lastMove != "")
+                    writeTargetInit = squares.indexOf(games[gamify].lastMove.slice(2, 4));
+                else lastMove = null;
+                var data = new Uint8Array(1);
+                data[0] = writeTargetInit;
+                ble.write(device_id, service_id, characteristic_id, data.buffer);
+                window.currentGame = games[gamify].fullId;
+                gamify = games.length;
+                gameConnect(gameInfo);
+
+            }
+            else
+                console.log("not ongame with " + games[gamify].fullId);
+            gamify++;
+            lichessOnGame();
+
+        }
+    };
+    xhttp.send();
+
+    // -------------------------------------------------- //
+
+}
+
+function loadLobbySocket() {
+    clientId = Math.random().toString(36).substring(2);
+    var socketUrl = 'wss://socket.lichess.org:9026/socket?sri=' + clientId;
+
+    window.lobbySocket = new WebSocket(socketUrl);
+
+    lobbySocket.onopen = function () {
+
+        window.pinger = setInterval(function () {
+
+            ping();
+
+        }, 2000);
+
+    };
+
+    lobbySocket.onmessage = function (event) {
+
+
+        console.log(event.data);
+
+        var eventData = JSON.parse(event.data);
+
+        if (eventData.hasOwnProperty("t")) {
+            if (eventData.t == "following_onlines") {
+                if (socket != null)
+                    socket.close();
+                lichessLogin();
+
+            }
+        }
+    };
+
+    lobbySocket.onerror = function () {
+        console.log('error occurred!');
+    };
+
+    lobbySocket.onclose = function (event) {
+        clearInterval(pinger);
+        pinger = null;
+        clearInterval(writer);
+        console.log("lobbySocketClosed!");
+
+        lobbySocket = null;
+
+    };
+
+}
+
+lobbySocket = null;
 
 // Login to Lichess
 function lichessLogin() {
+
     var xhttp = new XMLHttpRequest();
     var url = "https://en.lichess.org/login";
     var params = "username=" + $('#user').val() + "&password=" + $('#password').val();
@@ -11,6 +125,7 @@ function lichessLogin() {
     xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
     xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
+
             console.log(xhttp.responseText);
             document.getElementById("loginInfo").style.display = "none";
             document.getElementById("connectInfo").style.display = "none";
@@ -18,8 +133,11 @@ function lichessLogin() {
             document.getElementById("connectedInfo").style.display = "initial";
             document.getElementById("username").innerText = JSON.parse(xhttp.responseText).username;
 
-            
-            loadGameSockets();
+            if (lobbySocket == null)
+                loadLobbySocket();
+
+            superdd = xhttp.responseText;
+            lichessOnGame();
         }
         else if (this.readyState == 4 && this.status != 200)
             document.getElementById('loginInfo').style.display = 'initial';
@@ -47,30 +165,6 @@ function lichessLogout() {
     xhttp.send();
 }
 
-//// Get Lichess account info including current games
-//// returns true if logged in, false if "unauthorized"
-//function getLichessUser() {
-//    var xhttp = new XMLHttpRequest();
-//    var url = "https://en.lichess.org/account/info/";
-//    var bustCache = '?' + new Date().getTime();
-//    xhttp.open("GET", url + bustCache, true);
-
-//    // send the proper header information along with the request
-//    xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
-//    xhttp.onreadystatechange = function () {
-//        if (this.readyState == 4 && this.status == 200) {
-//            // status OK --> return true
-//            document.getElementById("connectH2").innerHTML = JSON.parse(xhttp.responseText).username + "<br /><span onclick='lichessLogout()'>logout</span>";
-//        }
-//        else if (this.readyState == 4 && this.status != 200) {
-//            // unauthorized --> return false
-//            document.getElementById("connectH2").innerHTML = "Connect to<br />lichess";
-//        }
-//    };
-//    xhttp.send();
-
-//}
-
 function createMachineGame() {
     console.log("game with machine requested");
 }
@@ -87,100 +181,80 @@ lastMove = null;
 
 latestMove = null;
 
-function gameConnect(fullID) {
+version = 0;
 
-    if (pinger == null) {
+function gameConnect(gameInfo) {
 
-        pinger = "pinger not null now";
 
-        window.currentGame = fullID;
 
-        // ---------------- Store Game Info ----------------- //
 
-        var xhttp = new XMLHttpRequest();
-        var url = "https://en.lichess.org/" + currentGame;
-        xhttp.open("GET", url, true);
 
-        xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                gameInfo = JSON.parse(xhttp.responseText);
-                startGame();
+    version = 0;
+
+    window.gameId = gameInfo.game.id;
+
+    console.log("connecting to game " + gameId);
+
+    dests = gameInfo.possibleMoves;
+
+    player = gameInfo.game.player;
+    myColor = gameInfo.player.color;
+
+    var baseUrl = gameInfo.url.socket; // obtained from game creation API (`url.socket`)
+    clientId = Math.random().toString(36).substring(2); // created and stored by the client
+
+    var socketUrl = 'wss://socket.lichess.org:9026' + baseUrl + '?sri=' + clientId;
+
+    window.awaitingAck = false;
+
+    window.sentMove = null;
+
+    window.socket = new WebSocket(socketUrl);
+
+    socket.onopen = function () {
+
+
+    };
+
+    socket.onmessage = function (event) {
+
+
+        console.log(event.data);
+
+        if (event.data.includes("end"))
+            socket.close();
+
+        var eventData = JSON.parse(event.data);
+
+        if (eventData.hasOwnProperty("t")) {
+            if (eventData.t == "b") {
+                for (var i = 0; i < eventData.d.length; i++)
+                    digestMSG(eventData.d[i]);
             }
-        };
-        xhttp.send();
-
-        // -------------------------------------------------- //
-
-        function startGame() {
-
-            window.version = gameInfo.player.version;
-
-            window.gameId = gameInfo.game.id;
-
-            dests = gameInfo.possibleMoves;
-
-            player = gameInfo.game.player;
-            myColor = gameInfo.player.color;
-
-            var baseUrl = gameInfo.url.socket; // obtained from game creation API (`url.socket`)
-            clientId = Math.random().toString(36).substring(2); // created and stored by the client
-
-            var socketUrl = 'wss://socket.lichess.org:9026' + baseUrl + '?sri=' + clientId;
-
-            window.awaitingAck = false;
-
-            window.sentMove = null;
-
-            window.socket = new WebSocket(socketUrl);
-
-            socket.onopen = function () {
-
-                window.pinger = setInterval(function () {
-
-                    ping();
-
-                }, 2000);
-
-            };
-
-            socket.onmessage = function (event) {
-
-
-                console.log(event.data);
-
-                var eventData = JSON.parse(event.data);
-
-                if (eventData.hasOwnProperty("t")) {
-                    if (eventData.t == "b") {
-                        for (var i = 0; i < eventData.d.length; i++)
-                            digestMSG(eventData.d[i]);
-                    }
-                    else
-                        digestMSG(eventData);
-                }
-            };
-
-            socket.onerror = function () {
-                console.log('error occurred!');
-            };
-
-            socket.onclose = function (event) {
-                clearInterval(pinger);
-                pinger = null;
-
-                console.log("socketClosed!");
-
-            };
-
-            try {
-                syncFEN();
-            }
-            catch (err) {
-            }
-
+            else
+                digestMSG(eventData);
         }
+    };
+
+    socket.onerror = function () {
+        console.log('error occurred!');
+    };
+
+    socket.onclose = function (event) {
+
+        socket = null;
+
+        console.log("socketClosed!");
+
+    };
+
+    try {
+        syncFEN();
     }
+    catch (err) {
+    }
+
+
 }
 
 
@@ -254,11 +328,20 @@ function syncFEN() {
     xhttp.send();
 }
 
+socket = null;
+
 function ping() {
 
-    socket.send(JSON.stringify({
+    if (socket != null)
+        socket.send(JSON.stringify({
+            t: 'p',
+            v: version
+        }));
+
+
+
+    lobbySocket.send(JSON.stringify({
         t: 'p',
-        v: version
     }));
 
     console.log(JSON.stringify({

@@ -121,59 +121,6 @@
         </div>
     </div>
 
-
-    <script>
-
-        function loadGameSockets() {
-
-
-
-
-
-
-
-
-            var xhttp = new XMLHttpRequest();
-            var url = "https://en.lichess.org/account/info/";
-            var bustCache = '?' + new Date().getTime();
-            xhttp.open("GET", url + bustCache, true);
-
-            // send the proper header information along with the request
-            xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
-            xhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-
-                    //if (document.getElementById("always").checked)
-                    //    launchApp();
-
-                    games = JSON.parse(xhttp.responseText).nowPlaying;
-                    var writeTargetInit;
-                    if (games[0].lastMove != "")
-                        writeTargetInit = squares.indexOf(games[0].lastMove.slice(2, 4));
-                    else lastMove = null;
-                    var data = new Uint8Array(1);
-                    data[0] = writeTargetInit;
-                    ble.write(device_id, service_id, characteristic_id, data.buffer);
-
-                    gameConnect(games[0].fullId);
-                    //for (var i = 0; i < games.length; i++) {
-
-                    //    if (i % 2 == 0)
-                    //        $("#gameList").append("<a style='text-decoration:none' href='#chessboard' class='current' data-gametype='lichess' data-secondsleft='" + games[i].secondsLeft + "' data-orientation='" + games[i].color + "' data-lastmove='" + games[i].lastMove + "' data-gameid='" + games[i].fullId + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><div id='board" + i + "' style='width: 125px; margin-top: -5px; margin-right: -10px; float: right'></div><h2 style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + "</h2><p style='color: #ffffff; text-shadow: none'>lichess &middot; tap to play</p></div></a><div style='clear:both'></div><br />");
-                    //    else
-                    //        $("#gameList").append("<a style='text-decoration:none' href='#chessboard' class='current' data-gametype='lichess' data-secondsleft='" + games[i].secondsLeft + "' data-orientation='" + games[i].color + "' data-lastmove='" + games[i].lastMove + "' data-gameid='" + games[i].fullId + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><div id='board" + i + "' style='width: 125px; margin-top: -5px; margin-left: -10px; float: left'></div><h2 style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + "</h2><p style='color: #ffffff; text-shadow: none'>lichess &middot; tap to play</p></div></a><div style='clear:both'></div><br />");
-
-
-                    //}
-
-
-                }
-            };
-            xhttp.send();
-        }
-
-    </script>
-
     <div data-role="page" id="bluetooth" data-theme="a">
         <div data-role="header" data-add-back-btn="true">
             <h1>Connect Board</h1>
