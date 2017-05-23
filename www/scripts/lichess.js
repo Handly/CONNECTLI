@@ -16,7 +16,7 @@ function lichessOnGame() {
     else
         gamify = 0;
 
-    
+
 
 
 
@@ -115,6 +115,14 @@ function loadLobbySocket() {
         pinger = null;
         clearInterval(writer);
         console.log("lobbySocketClosed!");
+        if (socket != null)
+            socket.close();
+        
+
+        document.getElementById("connectInfo").style.display = "initial";
+        document.getElementById("logoutInfo").style.display = "none";
+        document.getElementById("connectedInfo").style.display = "none";
+
 
         lobbySocket = null;
 
@@ -173,9 +181,7 @@ function lichessLogout() {
         if (this.readyState == 4 && this.status == 200) {
             console.log(xhttp.responseText);
             $('#user').val("");
-            document.getElementById("connectInfo").style.display = "initial";
-            document.getElementById("logoutInfo").style.display = "none";
-            document.getElementById("connectedInfo").style.display = "none";
+            
         }
     };
     xhttp.send();
@@ -231,7 +237,7 @@ function gameConnect(gameInfo) {
 
     socket.onopen = function () {
 
-        document.getElementById("connectedStatus").innerText = "Connected to Game " + gameId;
+        document.getElementById("connectedStatus").innerText = "Connected to " + gameId;
 
     };
 
@@ -264,6 +270,8 @@ function gameConnect(gameInfo) {
         socket = null;
 
         console.log("socketClosed!");
+
+        document.getElementById("connectedStatus").innerText = "Tap to find game";
 
         clearInterval(writer);
 

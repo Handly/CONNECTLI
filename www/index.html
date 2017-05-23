@@ -65,7 +65,7 @@
 
                 <div id="logoutInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none;">
                     <h2 id="username" style="color: #ffffff; text-shadow: none"></h2>
-                    <span onclick='lichessLogout()'>logout</span>
+                    <span onclick='lobbySocket.close(); lichessLogout();'>logout</span>
                 </div>
 
                 <div id="loginInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none">
@@ -79,9 +79,9 @@
                 <div id="connectedInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none">
                     <br />
                     <br />
-                    <button onclick="if (this.innerText.includes('?')) lichessLogin()" id="connectedStatus"></button>
-                    <button>disconnect</button>
-                    <button onclick="launchApp()">launch app</button>
+                    <button onclick="if (this.innerText.includes('?') || this.innerText.includes('Tap')) lichessLogin();" id="connectedStatus"></button>
+                    <button onclick="lobbySocket.close();">Disconnect</button>
+                    <button onclick="launchApp()">Launch lichess App</button>
                     <!--<label for="always">Always launch app</label>
                     <input type="checkbox" id="always">-->
                 </div>
@@ -162,8 +162,8 @@
             });
 
             ble.scan([], 5, function (device) {
-                console.log(device.name.toLowerCase() == "connect v2" || device.name.toLowerCase() == "dual-spp");
-                $("#deviceList").append("<a style='text-decoration:none' href='#home' class='current' data-deviceid='" + device.id + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><h2 style='color: #ffffff; text-shadow: none'>" + device.name + "</h2><p style='color: #ffffff; text-shadow: none'>" + device.id + " &middot; tap to connect</p></div></a><div style='clear:both'></div><br />");
+                if (device.name.toLowerCase() == "connect v2" || device.name.toLowerCase() == "dual-spp")
+                    $("#deviceList").append("<a style='text-decoration:none' href='#home' class='current' data-deviceid='" + device.id + "'><div style='width: 85%; height: 110px; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center; overflow: hidden'><h2 style='color: #ffffff; text-shadow: none'>" + device.name + "</h2><p style='color: #ffffff; text-shadow: none'>" + device.id + " &middot; tap to connect</p></div></a><div style='clear:both'></div><br />");
 
             }, console.log('Could not find board'));
 
