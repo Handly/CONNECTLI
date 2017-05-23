@@ -2,18 +2,24 @@
 gamify = 0;
 // looks for onGame in the users games
 function lichessOnGame() {
-    console.log("1");
+    console.log("lichessOnGame called");
     games = JSON.parse(superdd).nowPlaying;
 
 
-
-
-
-    if (gamify < games.length)
+    // so if it looped through all unsuccessfully, if successful it would make gamify 101
+    if (gamify == games.length) {
+        document.getElementById("connectedStatus").innerText = "No Active Game Found ↻";
+        gamify = 0;
+    }
+    else if (gamify < games.length)
         tryy(games[gamify].fullId);
     else
         gamify = 0;
-    console.log("2");
+
+    
+
+
+
 
 
 
@@ -22,12 +28,14 @@ function lichessOnGame() {
 }
 
 function tryy(id) {
+    console.log("tryy called");
 
     // ---------------- Store Game Info ----------------- //
 
     var xhttp = new XMLHttpRequest();
     var url = "https://en.lichess.org/" + id;
-    xhttp.open("GET", url, true);
+    var bustCache = '?' + new Date().getTime();
+    xhttp.open("GET", url + bustCache, true);
 
 
     xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
@@ -36,6 +44,7 @@ function tryy(id) {
 
             gameInfo = JSON.parse(xhttp.responseText);
             if (gameInfo.player.onGame) {
+                document.getElementById("connectedStatus").innerText = "Active Game Found!";
                 console.log("ongame with " + games[gamify].fullId);
                 var writeTargetInit;
                 if (games[gamify].lastMove != "")
@@ -45,12 +54,14 @@ function tryy(id) {
                 data[0] = writeTargetInit;
                 ble.write(device_id, service_id, characteristic_id, data.buffer);
                 window.currentGame = games[gamify].fullId;
-                gamify = games.length;
+                gamify = 100;
                 gameConnect(gameInfo);
 
             }
             else
                 console.log("not ongame with " + games[gamify].fullId);
+
+
             gamify++;
             lichessOnGame();
 
@@ -116,10 +127,13 @@ lobbySocket = null;
 // Login to Lichess
 function lichessLogin() {
 
+    console.log("lichessLogin called");
+
     var xhttp = new XMLHttpRequest();
     var url = "https://en.lichess.org/login";
+    var bustCache = '?' + new Date().getTime();
     var params = "username=" + $('#user').val() + "&password=" + $('#password').val();
-    xhttp.open("POST", url, true);
+    xhttp.open("POST", url + bustCache, true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     // send the proper header information along with the request
     xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
@@ -137,6 +151,8 @@ function lichessLogin() {
                 loadLobbySocket();
 
             superdd = xhttp.responseText;
+
+            document.getElementById("connectedStatus").innerText = "Searching for Active Game...";
             lichessOnGame();
         }
         else if (this.readyState == 4 && this.status != 200)
@@ -195,6 +211,8 @@ function gameConnect(gameInfo) {
 
     console.log("connecting to game " + gameId);
 
+    document.getElementById("connectedStatus").innerText = "Connecting to Game " + gameId + "...";
+
     dests = gameInfo.possibleMoves;
 
     player = gameInfo.game.player;
@@ -213,6 +231,7 @@ function gameConnect(gameInfo) {
 
     socket.onopen = function () {
 
+        document.getElementById("connectedStatus").innerText = "Connected to Game " + gameId;
 
     };
 
@@ -245,6 +264,8 @@ function gameConnect(gameInfo) {
         socket = null;
 
         console.log("socketClosed!");
+
+        clearInterval(writer);
 
     };
 
