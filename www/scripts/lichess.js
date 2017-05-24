@@ -5,11 +5,17 @@ function lichessOnGame() {
     console.log("lichessOnGame called");
     games = JSON.parse(superdd).nowPlaying;
 
+    document.getElementById("gameList").innerHTML = "";
 
+    for (var i = 0; i < games.length; i++) {
+        $("#gameList").append("<div id='" + games[i].gameId + "' data-gameid='" + games[i].fullId + "' style='width: 100%; border-top: 1px solid white; margin: auto; text-align: center; overflow: hidden'><p style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + " | " + games[i].gameId + "</p></div>");
+
+    }
     // so if it looped through all unsuccessfully, if successful it would make gamify 101
     if (gamify == games.length) {
-        document.getElementById("connectedStatus").innerText = "You're not on a game! ↻";
+        console.log("You're not on a game!");
         gamify = 0;
+        launchApp();
     }
     else if (gamify < games.length)
         tryy(games[gamify].fullId);
@@ -44,7 +50,7 @@ function tryy(id) {
 
             gameInfo = JSON.parse(xhttp.responseText);
             if (gameInfo.player.onGame) {
-                document.getElementById("connectedStatus").innerText = "Active Game Found!";
+                console.log("Active Game Found!");
                 console.log("ongame with " + games[gamify].fullId);
                 var writeTargetInit;
                 if (games[gamify].lastMove != "")
@@ -55,6 +61,8 @@ function tryy(id) {
                 ble.write(device_id, service_id, characteristic_id, data.buffer);
                 window.currentGame = games[gamify].fullId;
                 gamify = 100;
+                launchApp();
+                
                 gameConnect(gameInfo);
 
             }
@@ -117,7 +125,7 @@ function loadLobbySocket() {
         console.log("lobbySocketClosed!");
         if (socket != null)
             socket.close();
-        
+
 
         document.getElementById("connectInfo").style.display = "initial";
         document.getElementById("logoutInfo").style.display = "none";
@@ -160,7 +168,7 @@ function lichessLogin() {
 
             superdd = xhttp.responseText;
 
-            document.getElementById("connectedStatus").innerText = "Searching for Active Game...";
+            console.log("Searching for Active Game...");
             lichessOnGame();
         }
         else if (this.readyState == 4 && this.status != 200)
@@ -181,7 +189,7 @@ function lichessLogout() {
         if (this.readyState == 4 && this.status == 200) {
             console.log(xhttp.responseText);
             $('#user').val("");
-            
+
         }
     };
     xhttp.send();
@@ -210,14 +218,15 @@ function gameConnect(gameInfo) {
 
 
 
-
     version = 0;
 
     window.gameId = gameInfo.game.id;
 
+    document.getElementById(gameId).style.backgroundColor = "#008aff";
+
     console.log("connecting to game " + gameId);
 
-    document.getElementById("connectedStatus").innerText = "Connecting to Game " + gameId + "...";
+    console.log("Connecting to Game " + gameId + "...");
 
     dests = gameInfo.possibleMoves;
 
@@ -237,7 +246,7 @@ function gameConnect(gameInfo) {
 
     socket.onopen = function () {
 
-        document.getElementById("connectedStatus").innerText = "Connected to " + gameId;
+        console.log("Connected to " + gameId);
 
     };
 
@@ -271,7 +280,7 @@ function gameConnect(gameInfo) {
 
         console.log("socketClosed!");
 
-        document.getElementById("connectedStatus").innerText = "You're not on a game! ↻";
+        console.log("You're not on a game!");
 
         clearInterval(writer);
 
@@ -430,19 +439,21 @@ function digestMSG(eventData) {
 }
 
 function launchApp() {
-    try {
-        startApp.set({
-            "application": "org.lichess.mobileapp"
-        }).start();
-    }
-    catch (error) {
-        console.log(error);
-    }
 
-    try {
-        startApp.set("lichess://").start();
-    }
-    catch (error) {
+    startApp.set({
+        "application": "org.lichess.mobileapp"
+    }).start(function () { /* success */
+        console.log("launched!");
+    }, function (error) { /* fail */
         console.log(error);
-    }
+    });
+
+
+
+    startApp.set("lichess://").start(function () { /* success */
+        console.log("launched!");
+    }, function (error) { /* fail */
+        console.log(error);
+    });
+
 }

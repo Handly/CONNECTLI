@@ -55,9 +55,7 @@
         <div data-role="main" class="ui-content" style="background-color: #1a1a1a;">
             <!-- start example HTML -->
 
-            <div style="margin-top: 150px;" id="gameList"></div>
-
-            <div style="width: 85%; min-height: 110px; color: #ffffff; text-shadow: none; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; text-align: center;">
+            <div style="width: 85%; min-height: 110px; color: #ffffff; text-shadow: none; background-color: #4286f4; padding: 5px 10px 10px 10px; margin: auto; margin-top:150px; text-align: center;">
 
                 <div id="connectInfo" onclick="lichessLogin()" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;">
                     <!--<div style="float:right"><img style="height:80px" src="img/lichess.svg" /></div>-->
@@ -80,9 +78,13 @@
                 <div id="connectedInfo" style="width:100%; background-color: #4286f4; margin: auto; text-align: center;display:none">
                     <br />
                     <br />
-                    <button onclick="if (this.innerText.includes('not')) lichessLogin();" id="connectedStatus"></button>
-                    <button onclick="lobbySocket.close();">Disconnect</button>
-                    <button onclick="launchApp()">Launch lichess App</button>
+                    <div style="width:100%; background-color:#ff8a00">
+                        <div style="width:75%; float:left; background-color:#000000" onclick="lobbySocket.close();"><p>Disconnect</p></div><div style="width:25%;float:right; background-color:#ffff00" onclick="lichessLogin();"><p>Reload</p></div>
+                    </div>
+                    <div id="gameList">
+                        No games Found!
+                    </div>
+                    
                     <!--<label for="always">Always launch app</label>
                     <input type="checkbox" id="always">-->
                 </div>
