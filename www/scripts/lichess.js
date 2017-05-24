@@ -15,7 +15,7 @@ function lichessOnGame() {
     if (gamify == games.length) {
         console.log("You're not on a game!");
         gamify = 0;
-        launchApp();
+        //launchApp();
     }
     else if (gamify < games.length)
         tryy(games[gamify].fullId);
