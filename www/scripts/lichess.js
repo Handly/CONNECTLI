@@ -8,7 +8,7 @@ function lichessOnGame() {
 
     // so if it looped through all unsuccessfully, if successful it would make gamify 101
     if (gamify == games.length) {
-        document.getElementById("connectedStatus").innerText = "No Active Game Found ↻";
+        document.getElementById("connectedStatus").innerText = "You're not on a game! ↻";
         gamify = 0;
     }
     else if (gamify < games.length)
@@ -75,7 +75,7 @@ function tryy(id) {
 
 function loadLobbySocket() {
     clientId = Math.random().toString(36).substring(2);
-    var socketUrl = 'wss://socket.lichess.org:9026/socket?sri=' + clientId;
+    var socketUrl = 'wss://socket.lichess.org/socket?sri=' + clientId;
 
     window.lobbySocket = new WebSocket(socketUrl);
 
@@ -227,7 +227,7 @@ function gameConnect(gameInfo) {
     var baseUrl = gameInfo.url.socket; // obtained from game creation API (`url.socket`)
     clientId = Math.random().toString(36).substring(2); // created and stored by the client
 
-    var socketUrl = 'wss://socket.lichess.org:9026' + baseUrl + '?sri=' + clientId;
+    var socketUrl = 'wss://socket.lichess.org' + baseUrl + '?sri=' + clientId;
 
     window.awaitingAck = false;
 
@@ -271,9 +271,12 @@ function gameConnect(gameInfo) {
 
         console.log("socketClosed!");
 
-        document.getElementById("connectedStatus").innerText = "Tap to find game";
+        document.getElementById("connectedStatus").innerText = "You're not on a game! ↻";
 
         clearInterval(writer);
+
+        writeSource = null;
+        writeTarget = null;
 
     };
 
