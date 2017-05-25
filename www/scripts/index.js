@@ -58,11 +58,15 @@
 
     };
 
+    window.foreground = true;
+
     function onPause() {
         // TODO: This application has been suspended. Save application state here.
+        foreground = false;
     };
 
     function onResume() {
         // TODO: This application has been reactivated. Restore application state here.
+        foreground = true;
     };
 })();

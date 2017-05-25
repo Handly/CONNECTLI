@@ -3,19 +3,21 @@ gamify = 0;
 // looks for onGame in the users games
 function lichessOnGame() {
     console.log("lichessOnGame called");
-    games = JSON.parse(superdd).nowPlaying;
+    window.games = JSON.parse(superdd).nowPlaying;
 
     document.getElementById("gameList").innerHTML = "";
 
     for (var i = 0; i < games.length; i++) {
-        $("#gameList").append("<div id='" + games[i].gameId + "' data-gameid='" + games[i].fullId + "' style='width: 100%; border-top: 1px solid white; margin: auto; text-align: center; overflow: hidden'><p style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + " | " + games[i].gameId + "</p></div>");
+        id = games[i].fullId;
+        $("#gameList").append("<div onclick='socket.close(); openGame(\"" + id + "\"," + i + ")' id='" + games[i].gameId + "' data-gameid='" + games[i].fullId + "' style='width: 100%; margin: auto; background-color:transparent; text-align: center; overflow: hidden'><p style='color: #ffffff; text-shadow: none'>" + games[i].opponent.username + " /" + games[i].gameId + "</p></div>");
 
     }
     // so if it looped through all unsuccessfully, if successful it would make gamify 101
     if (gamify == games.length) {
         console.log("You're not on a game!");
         gamify = 0;
-        //launchApp();
+        if (foreground)
+            launchApp();
     }
     else if (gamify < games.length)
         tryy(games[gamify].fullId);
@@ -33,8 +35,63 @@ function lichessOnGame() {
 
 }
 
+function openGame(id,i) {
+    
+    if (socket != null) {
+        
+        setTimeout(function () { openGame(id, i) }, 250);
+        return false;
+    }
+
+
+
+
+    // ---------------- Store Game Info ----------------- //
+
+    var xhttp = new XMLHttpRequest();
+    var url = "https://en.lichess.org/" + id;
+    var bustCache = '?' + new Date().getTime();
+    xhttp.open("GET", url + bustCache, true);
+
+
+    xhttp.setRequestHeader("Accept", "application/vnd.lichess.v1+json");
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+
+            gameInfo = JSON.parse(xhttp.responseText);
+
+            console.log("Active Game Found!");
+            console.log("ongame with " + games[i].fullId);
+            var writeTargetInit;
+            if (games[i].lastMove != "")
+                writeTargetInit = squares.indexOf(games[i].lastMove.slice(2, 4));
+            else lastMove = null;
+            var data = new Uint8Array(1);
+            data[0] = writeTargetInit;
+            ble.write(device_id, service_id, characteristic_id, data.buffer);
+            window.currentGame = games[i].fullId;
+
+            gameConnect(gameInfo);
+
+
+
+
+        }
+    };
+    xhttp.send();
+
+    // -------------------------------------------------- //
+
+}
+
+
 function tryy(id) {
-    console.log("tryy called");
+
+    if (socket != null) {
+
+        setTimeout(function () { tryy(id) }, 250);
+        return false;
+    }
 
     // ---------------- Store Game Info ----------------- //
 
@@ -61,8 +118,8 @@ function tryy(id) {
                 ble.write(device_id, service_id, characteristic_id, data.buffer);
                 window.currentGame = games[gamify].fullId;
                 gamify = 100;
-                launchApp();
-                
+                //launchApp();
+
                 gameConnect(gameInfo);
 
             }
@@ -222,7 +279,7 @@ function gameConnect(gameInfo) {
 
     window.gameId = gameInfo.game.id;
 
-    document.getElementById(gameId).style.backgroundColor = "#008aff";
+    
 
     console.log("connecting to game " + gameId);
 
@@ -247,6 +304,9 @@ function gameConnect(gameInfo) {
     socket.onopen = function () {
 
         console.log("Connected to " + gameId);
+
+        
+        document.getElementById(gameId).style.backgroundColor = "#86f442";
 
     };
 
@@ -280,12 +340,14 @@ function gameConnect(gameInfo) {
 
         console.log("socketClosed!");
 
-        console.log("You're not on a game!");
-
         clearInterval(writer);
 
         writeSource = null;
         writeTarget = null;
+
+        for (var j = 0; j < games.length; j++) {
+            document.getElementById(games[j].gameId).style.backgroundColor = "transparent";
+        }
 
     };
 
